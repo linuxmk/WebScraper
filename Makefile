@@ -50,8 +50,10 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = main.cpp 
-OBJECTS       = main.o
+SOURCES       = main.cpp \
+		scraper.cpp 
+OBJECTS       = main.o \
+		scraper.o
 DIST          = ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/common/unix.conf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/common/linux.conf \
@@ -198,6 +200,7 @@ DIST          = ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/qt_config.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/toolchain.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/default_pre.prf \
@@ -215,7 +218,8 @@ DIST          = ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/exceptions.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/yacc.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/lex.prf \
-		Scraping.pro  main.cpp
+		Scraping.pro scraper.h main.cpp \
+		scraper.cpp
 QMAKE_TARGET  = Scraping
 DESTDIR       = 
 TARGET        = Scraping
@@ -373,6 +377,7 @@ Makefile: Scraping.pro ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/qt_config.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/toolchain.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/default_pre.prf \
@@ -539,6 +544,7 @@ Makefile: Scraping.pro ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/qt_config.prf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/toolchain.prf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/default_pre.prf:
@@ -573,7 +579,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents scraper.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp scraper.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -621,8 +628,11 @@ compiler_clean: compiler_moc_predefs_clean
 
 ####### Compile
 
-main.o: main.cpp 
+main.o: main.cpp scraper.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
+
+scraper.o: scraper.cpp scraper.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o scraper.o scraper.cpp
 
 ####### Install
 
