@@ -1,56 +1,108 @@
 #ifndef SCRAPER_H
 #define SCRAPER_H
+#include <string.h>
+#include <stdlib.h>
 #include <unordered_map>
 #include <string>
+#include <vector>
+#include <thread>
 
 #include <curl/curl.h>
 #include <libxml/HTMLparser.h>
 
-
-class Site
+class WebTitle
 {
 public:
-    Site(){}
-//    Site(std::string & tag);
-    Site(const std::string &name, const std::string &&tag);
 
+    struct Context
+    {
+      Context(): addTitle(false), dataExtracted(false) { }
 
+      std::string tag;
+      char **attr;
+      bool addTitle;
+      bool dataExtracted;
+      std::string title;
+    };
+
+    WebTitle() {}
+    WebTitle(const std::string &name, const std::string &tag, const char ** attr);
+    void parseHtml( );
+    Context& getContext() { return  context;}
+     bool createConn(const std::string &name);
 
 private:
 
     bool initCurl(const char *url);
     static int writer(char *data, size_t size, size_t nmemb, std::string *writerData);
+    static void StartElement(void *voidContext,
+                             const xmlChar *name,
+                             const xmlChar **attributes);
 
-    std::string tag;
-    std::string data;
 
-    CURL *conn;
+    static void  EndElement(void *voidContext,
+                           const xmlChar *name);
+    static void  cdata(void *voidContext,
+                      const xmlChar *chars,
+                      int length);
+
+    static void  Characters(void *voidContext,
+                           const xmlChar *chars,
+                           int length);
+
+    static void handleCharacters(Context *context,
+                                 const xmlChar *chars,
+                                 int length);
+    Context context;
+
+    CURL *conn{};
     CURLcode code;
     std::string htmlData;
-    char errorBuffer[CURL_ERROR_SIZE];
+    char errorBuffer[CURL_ERROR_SIZE]{};
 
-
-
+    htmlSAXHandler saxHandler =
+    {
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        StartElement,
+        EndElement,
+        nullptr,
+        Characters,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        cdata,
+        NULL
+    };
 };
 
 class Scraper
 {
 public:
-    Scraper();
+    Scraper(std::unordered_map<std::string, WebTitle> & umap);
+    ~Scraper();
 
     void startScraping(void);
     std::string getHeadline(std::string &webSite);
 
 private:
-    void parseHtml(const std::string &html,
-                          std::string &title);
-
-
-    void operator()(const std::string& web);
-
-//    static Scraper instance;
-    std::unordered_map<std::string, Site> webSites;
-
-
+    std::unordered_map<std::string, WebTitle> webSites;
+    std::vector<std::thread> threadIds;
 };
 #endif // SCRAPER_H

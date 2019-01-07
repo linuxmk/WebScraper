@@ -1,147 +1,108 @@
 #include <iostream>
+#include <fstream>
 #include "scraper.h"
-#include <string.h>
-#include <stdlib.h>
+
 using namespace  std;
 
-//Scraper Scraper::instance;
-
-//Scraper& Scraper::getInstance()
-//{
-//    return instance;
-//}
-
-
-#ifdef _MSC_VER
-#define COMPARE(a, b) (!_stricmp((a), (b)))
-#else
-#define COMPARE(a, b) (!strcasecmp((a), (b)))
-#endif
-
-
-static void StartElement(void *voidContext,
+void WebTitle::StartElement(void *voidContext,
                          const xmlChar *name,
                          const xmlChar **attributes)
 {
-//  Context *context = (Context *)voidContext;
+    auto *context = (Context *)voidContext;
 
+    if(attributes != nullptr && *attributes != nullptr)
+    {
+        if( (!context->dataExtracted) && !strcasecmp((char *)context->tag.c_str(),(char *)name ) && !strcasecmp( *(char **)attributes, (char *)context->attr[0]) && !strcasecmp( *(char **)(attributes+1), (char *)context->attr[1] ) )
+        {
+            cerr << "Attribute[0] = " << attributes[0] << " attr[1] = " << attributes[1] << endl;
+            context->title = "";
+            context->dataExtracted = true;
+            context->addTitle = true;
 
-  if(COMPARE((char *)name, "div") && COMPARE((char *)*attributes, "class") && COMPARE((char *)*(attributes+1), "cluster") ) {
-    fprintf(stderr, "tag = <%s>\n", (char *) name);
-//    context->title = "";
-//    context->addTitle = true;
-  }
-  (void) attributes;
+        }
+    }
 }
 
 //
 //  libxml end element callback function
 //
 
-static void EndElement(void *voidContext,
+void WebTitle::EndElement(void *voidContext,
                        const xmlChar *name)
 {
-//  Context *context = (Context *)voidContext;
+    auto *context = (Context *)voidContext;
 
-  if(COMPARE((char *)name, "div") )
-  {
-      fprintf(stderr, "tag = </%s>\n", (char *) name);
-//      context->addTitle = false;
-  }
+    if(!strcasecmp((char *)name, "div") && context->addTitle )
+    {
+         context->addTitle = false;
+    }
 }
 
 //
 //  Text handling helper function
 //
 
-//static void handleCharacters(Context *context,
-//                             const xmlChar *chars,
-//                             int length)
-//{
-//  if(context->addTitle)
-//    context->title.append((char *)chars, length);
-//}
+void WebTitle::handleCharacters(Context *context,
+                             const xmlChar *chars,
+                             int length)
+{
+  if(context->addTitle)
+  {
+    cerr << "chars = " << chars << endl;
+    context->title.append((char *)chars, length);
+    cerr << "title = " << context->title << endl;
+  }
+}
 
 //
 //  libxml PCDATA callback function
 //
 
-static void Characters(void *voidContext,
+void WebTitle::Characters(void *voidContext,
                        const xmlChar *chars,
                        int length)
 {
-//  Context *context = (Context *)voidContext;
-
-//  handleCharacters(context, chars, length);
+    auto *context = (Context *)voidContext;
+    handleCharacters(context, chars, length);
 }
 
 //
 //  libxml CDATA callback function
 //
 
-static void cdata(void *voidContext,
-                  const xmlChar *chars,
-                  int length)
+void WebTitle::cdata(void *voidContext,
+                  const xmlChar * chars,
+                  int  length)
 {
-//  Context *context = (Context *)voidContext;
+  auto *context = (Context *)voidContext;
 
-//  handleCharacters(context, chars, length);
+  handleCharacters(context, chars, length);
 }
 
 
-
-static htmlSAXHandler saxHandler =
-{
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    StartElement,
-    EndElement,
-    nullptr,
-    Characters,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    cdata,
-    nullptr
-};
-
-void Scraper::parseHtml(const std::string &html,
-                      std::string &title)
+void WebTitle::parseHtml()
 {
   htmlParserCtxtPtr ctxt;
 //  Context context;
+  context.title = "";
 
-  ctxt = htmlCreatePushParserCtxt(&saxHandler, NULL, "", 0, "",
+//  htmlDocPtr doc = htmlReadMemory(htmlData.c_str() , htmlData.size(), "" , nullptr,HTML_PARSE_RECOVER );
+
+//  if(!doc)
+//      return;
+
+  ctxt = htmlCreatePushParserCtxt(&saxHandler, &context, "", 0, "",
                                   XML_CHAR_ENCODING_NONE);
 
-  htmlParseChunk(ctxt, html.c_str(), html.size(), 0);
+  htmlParseChunk(ctxt, htmlData.c_str(), htmlData.size(), 0);
   htmlParseChunk(ctxt, "", 0, 1);
 
   htmlFreeParserCtxt(ctxt);
 
-//  title = context.title;
 }
 
-Site::Site(const std::string &name, const std::string &&tag)
+bool WebTitle::createConn(const std::string &name)
 {
-    this->tag = tag;
-
     if(!initCurl(name.c_str()))
         throw std::out_of_range("Can not get " + name);
 
@@ -151,29 +112,39 @@ Site::Site(const std::string &name, const std::string &&tag)
     if(code != CURLE_OK) {
       throw std::out_of_range("Can not perform curl_easy_perform " );
     }
+
+    ofstream s;
+    s.open("time.mk.out", ios::app);
+
+    s << htmlData << endl;
+
+    return true;
 }
 
-
-Scraper::Scraper()
+WebTitle::WebTitle(const std::string &name, const std::string &tag, const char *attr[])
 {
-    try {
+    context.tag = tag;
+    context.attr = (char **)attr;
 
-        webSites.insert({
-                         {"https://time.mk", Site( std::string("https://time.mk"), std::string("div") )},
-                         {"www.espn.com", Site( std::string("www.espn.com"), std::string("div") )},
-    //                     {"www.foxnews.com", Site(std::string("div"))},
-    //                     {"www.nbcnews.com", Site(std::string("div"))}
-                        }
-        );
+   // createConn( name);
+}
 
-    } catch (std::out_of_range &e) {
-        std::cerr << e.what() << std::endl;
-    }
+
+Scraper::Scraper(std::unordered_map<std::string, WebTitle> & umap) : webSites(umap)
+{
 
 }
 
 
-bool Site::initCurl(const char *url)
+Scraper::~Scraper()
+{
+    for( auto& it : threadIds)
+        it.join();
+}
+
+
+
+bool WebTitle::initCurl(const char *url)
 {
     CURLcode code;
 
@@ -208,6 +179,7 @@ bool Site::initCurl(const char *url)
       return false;
     }
 
+    htmlData = "";
     code = curl_easy_setopt(conn, CURLOPT_WRITEDATA, &htmlData);
     if(code != CURLE_OK) {
       fprintf(stderr, "Failed to set write data [%s]\n", errorBuffer);
@@ -218,10 +190,10 @@ bool Site::initCurl(const char *url)
 }
 
 
-int Site::writer(char *data, size_t size, size_t nmemb,
+int WebTitle::writer(char *data, size_t size, size_t nmemb,
                   std::string *writerData)
 {
-  if(writerData == NULL)
+  if(writerData == nullptr)
     return 0;
 
   writerData->append(data, size*nmemb);
@@ -231,17 +203,17 @@ int Site::writer(char *data, size_t size, size_t nmemb,
 
 void Scraper::startScraping()
 {
-    //TODO create a thread
+    for( auto &site: webSites)
+    {
 
-    for( auto site: webSites)
-        this->operator()(site.first);
+        threadIds.push_back(std::thread([&site]() {
+
+            site.second.createConn(site.first);
+            site.second.parseHtml();
+        }));
+    }
 }
 
-
-void Scraper::operator()(const string & web)
-{
-
-}
 
 std::string Scraper::getHeadline(std::string &webSite)
 {
@@ -252,5 +224,7 @@ std::string Scraper::getHeadline(std::string &webSite)
             throw out_of_range("The website you enter is not in the list");
         }
 
-    //Print the headline
+        cerr << "WebSite << " << it->first  << "HeadLine news =>" << it->second.getContext().title << endl;
+        it->second.getContext().dataExtracted = false;
+        return it->second.getContext().title;
 }
