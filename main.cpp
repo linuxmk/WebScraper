@@ -5,13 +5,12 @@ using namespace std;
 
 
 
-
-
 int main(int argc, char *argv[])
 {
 
-   char ch;
-   Scraper sc = Scraper::getInstance();
+    char ch;
+    Scraper sc;
+
 
     while (true) {
 
@@ -28,15 +27,19 @@ int main(int argc, char *argv[])
             {
                 string webSite;
                 cin >> webSite;
-                sc.getHeadline(webSite);
+                try {
+                    sc.getHeadline(webSite);
+                } catch (out_of_range &e) {
+                    cerr << e.what() << endl;
+                }
             }
             break;
 
             case 'e':
                 exit(1);
 
-            default:
-            cerr << "Wrong command..." << endl;
+//            default:
+//            cerr << "Wrong command..." << endl;
         }
 
 

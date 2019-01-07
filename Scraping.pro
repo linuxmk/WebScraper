@@ -25,3 +25,17 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     scraper.h
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/release/ -lxml2
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/debug/ -lxml2
+else:unix:!macx: LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/ -lxml2
+
+INCLUDEPATH += $$PWD/../../../../../../../usr/include/libxml2
+DEPENDPATH += $$PWD/../../../../../../../usr/include/libxml2
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/release/ -lcurl
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/debug/ -lcurl
+else:unix: LIBS += -L$$PWD/../../../../../../../usr/lib/x86_64-linux-gnu/ -lcurl
+
+INCLUDEPATH += $$PWD/../../../../../../../usr/include/curl
+DEPENDPATH += $$PWD/../../../../../../../usr/include/curl

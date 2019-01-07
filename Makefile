@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I../../../../SDK/Qt/5.11.2/gcc_64/include -I../../../../SDK/Qt/5.11.2/gcc_64/include/QtCore -I. -I../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++
+INCPATH       = -I. -isystem /usr/include/libxml2 -isystem /usr/include/curl -I../../../../SDK/Qt/5.11.2/gcc_64/include -I../../../../SDK/Qt/5.11.2/gcc_64/include/QtCore -I. -I../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/rb/devel/SDK/Qt/5.11.2/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -38,7 +38,7 @@ DISTNAME      = Scraping1.0.0
 DISTDIR = /home/rb/devel/projects/c++/Scraping/Scraping/.tmp/Scraping1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-rpath,/home/rb/devel/SDK/Qt/5.11.2/gcc_64/lib
-LIBS          = $(SUBLIBS) -L/home/rb/devel/SDK/Qt/5.11.2/gcc_64/lib -lQt5Core -lpthread 
+LIBS          = $(SUBLIBS) -L/home/rb/devel/projects/c++/Scraping/Scraping/../../../../../../../usr/lib/x86_64-linux-gnu/ -lxml2 -lcurl -L/home/rb/devel/SDK/Qt/5.11.2/gcc_64/lib -lQt5Core -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -396,7 +396,7 @@ Makefile: Scraping.pro ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/yacc.prf \
 		../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/lex.prf \
 		Scraping.pro \
-		../../../../SDK/Qt/5.11.2/gcc_64/lib/libQt5Core.prl
+		/usr/lib/x86_64-linux-gnu/libQt5Core.prl
 	$(QMAKE) -o Makefile Scraping.pro -spec linux-g++ CONFIG+=debug CONFIG+=qml_debug
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/spec_pre.prf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/common/unix.conf:
@@ -563,7 +563,7 @@ Makefile: Scraping.pro ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/linux-g++/qmake.
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/yacc.prf:
 ../../../../SDK/Qt/5.11.2/gcc_64/mkspecs/features/lex.prf:
 Scraping.pro:
-../../../../SDK/Qt/5.11.2/gcc_64/lib/libQt5Core.prl:
+/usr/lib/x86_64-linux-gnu/libQt5Core.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile Scraping.pro -spec linux-g++ CONFIG+=debug CONFIG+=qml_debug
 
