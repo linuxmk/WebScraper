@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
                   "contentItem__titleWrapper"};
 
     const char * attrFoxNews[] = { "class",
-                  "content" , "2"};
+                  "content" };
 
     const char * attrNBCNews[] = { "class",
                   "info___1Xmsp pt5 pt0 ph5 pl4-m"};
