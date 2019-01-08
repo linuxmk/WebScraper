@@ -26,7 +26,7 @@ public:
     };
 
     WebTitle() {}
-    WebTitle(const std::string &name, const std::string &tag, const char ** attr);
+    WebTitle( const std::string &tag, const char ** attr);
     void parseHtml( );
     Context& getContext() { return  context;}
      bool createConn(const std::string &name);
@@ -53,12 +53,14 @@ private:
     static void handleCharacters(Context *context,
                                  const xmlChar *chars,
                                  int length);
+    void clearContext(void) ;
+
     Context context;
 
     CURL *conn{};
     CURLcode code;
-    std::string htmlData;
     char errorBuffer[CURL_ERROR_SIZE]{};
+    std::string htmlData;
 
     htmlSAXHandler saxHandler =
     {
@@ -88,7 +90,12 @@ private:
         nullptr,
         nullptr,
         cdata,
-        NULL
+        nullptr,
+        0,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
     };
 };
 
@@ -103,6 +110,6 @@ public:
 
 private:
     std::unordered_map<std::string, WebTitle> webSites;
-    std::vector<std::thread> threadIds;
+//    std::vector<std::thread> threadIds;
 };
 #endif // SCRAPER_H

@@ -5,17 +5,15 @@ using namespace std;
 static bool forever = true;
 
 
-int main(int  /*argc*/, char * /*argv*/[])
+int main(int argc, char *argv[])
 {
-
     char ch;
-
     unordered_map<std::string, WebTitle> webSites;
-    const char * attr[] = { "class",
+    const char * attrTime[] = { "class",
                   "cluster"};
 
     const char * attrEspn[] = { "class",
-                  "contentItem__contentWrapper"};
+                  "contentItem__titleWrapper"};
 
     const char * attrFoxNews[] = { "class",
                   "content" , "2"};
@@ -24,10 +22,10 @@ int main(int  /*argc*/, char * /*argv*/[])
                   "info___1Xmsp pt5 pt0 ph5 pl4-m"};
 
     webSites.insert({
-                        {"www.time.mk", WebTitle( std::string("https://time.mk"), std::string("div") , attr )},
-                         {"www.espn.com", WebTitle( std::string("www.espn.com"), std::string("div"), attrEspn )},
-                         {"www.foxnews.com", WebTitle( std::string("www.espn.com"), std::string("div"), attrFoxNews )},
-                     {"www.nbcnews.com", WebTitle( std::string("www.espn.com"), std::string("div"), attrNBCNews )}
+                        {"www.time.mk", WebTitle(  std::string("div") , attrTime )},
+                         {"www.espn.com", WebTitle(  std::string("div"), attrEspn )},
+                         {"www.foxnews.com", WebTitle(  std::string("div"), attrFoxNews )},
+                         {"www.nbcnews.com", WebTitle(  std::string("div"), attrNBCNews )}
                     }
     );
 
@@ -35,9 +33,8 @@ int main(int  /*argc*/, char * /*argv*/[])
 
     while (forever) {
 
-        cerr << "press e to exit===>";
+        cerr << "press e to exit ===>";
         cin >> ch;
-
 
         switch (ch) {
             case 's':
@@ -49,7 +46,7 @@ int main(int  /*argc*/, char * /*argv*/[])
                 string webSite;
                 cin >> webSite;
                 try {
-                    sc.getHeadline(webSite);
+                      cerr << "WebSite: " << webSite  << "\nHeadLine news => " << sc.getHeadline(webSite) << endl;
                 } catch (out_of_range &e) {
                     cerr << e.what() << endl;
                 }
@@ -59,12 +56,8 @@ int main(int  /*argc*/, char * /*argv*/[])
             case 'e':
                 forever = false;
                 break;
-
-//            default:
-//            cerr << "Wrong command..." << endl;
         }
     }
-
 
     return 0;
 }

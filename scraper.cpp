@@ -8,17 +8,16 @@ void WebTitle::StartElement(void *voidContext,
                          const xmlChar *name,
                          const xmlChar **attributes)
 {
-    auto *context = (Context *)voidContext;
+    auto *context = reinterpret_cast<Context*>(voidContext);
 
     if(attributes != nullptr && *attributes != nullptr)
     {
-        if( (!context->dataExtracted) && !strcasecmp((char *)context->tag.c_str(),(char *)name ) && !strcasecmp( *(char **)attributes, (char *)context->attr[0]) && !strcasecmp( *(char **)(attributes+1), (char *)context->attr[1] ) )
+        if( (!context->dataExtracted) && !strcasecmp( context->tag.c_str() , reinterpret_cast<const char *>(name) ) &&
+                !strcasecmp( *(reinterpret_cast<const char **>(attributes)), reinterpret_cast<const char *>(context->attr[0]))
+                             && !strcasecmp( *(reinterpret_cast<const char **>(attributes)+1), reinterpret_cast<const char *>(context->attr[1]) ) )
         {
-            cerr << "Attribute[0] = " << attributes[0] << " attr[1] = " << attributes[1] << endl;
             context->title = "";
-            context->dataExtracted = true;
             context->addTitle = true;
-
         }
     }
 }
@@ -30,9 +29,9 @@ void WebTitle::StartElement(void *voidContext,
 void WebTitle::EndElement(void *voidContext,
                        const xmlChar *name)
 {
-    auto *context = (Context *)voidContext;
+    auto *context = reinterpret_cast<Context*>(voidContext);
 
-    if(!strcasecmp((char *)name, "div") && context->addTitle )
+    if(!strcasecmp( reinterpret_cast<const char *>( name ), "div") && context->addTitle )
     {
          context->addTitle = false;
     }
@@ -46,11 +45,12 @@ void WebTitle::handleCharacters(Context *context,
                              const xmlChar *chars,
                              int length)
 {
-  if(context->addTitle)
+  if(!context->dataExtracted && context->addTitle )
   {
-    cerr << "chars = " << chars << endl;
+    context->dataExtracted = true;
+//    cerr << "chars = " << chars << endl;
     context->title.append((char *)chars, length);
-    cerr << "title = " << context->title << endl;
+    //    cerr << "title = " << context->title << endl;
   }
 }
 
@@ -62,7 +62,7 @@ void WebTitle::Characters(void *voidContext,
                        const xmlChar *chars,
                        int length)
 {
-    auto *context = (Context *)voidContext;
+    auto *context = reinterpret_cast<Context*>(voidContext);
     handleCharacters(context, chars, length);
 }
 
@@ -74,17 +74,21 @@ void WebTitle::cdata(void *voidContext,
                   const xmlChar * chars,
                   int  length)
 {
-  auto *context = (Context *)voidContext;
+  auto *context = reinterpret_cast<Context*>(voidContext);
 
   handleCharacters(context, chars, length);
 }
 
+void WebTitle::clearContext(void)
+{
+    context.addTitle = false;
+    context.dataExtracted = false;
+}
 
 void WebTitle::parseHtml()
 {
   htmlParserCtxtPtr ctxt;
-//  Context context;
-  context.title = "";
+  clearContext();
 
 //  htmlDocPtr doc = htmlReadMemory(htmlData.c_str() , htmlData.size(), "" , nullptr,HTML_PARSE_RECOVER );
 
@@ -94,11 +98,10 @@ void WebTitle::parseHtml()
   ctxt = htmlCreatePushParserCtxt(&saxHandler, &context, "", 0, "",
                                   XML_CHAR_ENCODING_NONE);
 
-  htmlParseChunk(ctxt, htmlData.c_str(), htmlData.size(), 0);
+  htmlParseChunk(ctxt, htmlData.c_str(), static_cast<int>( htmlData.size()), 0);
   htmlParseChunk(ctxt, "", 0, 1);
 
   htmlFreeParserCtxt(ctxt);
-
 }
 
 bool WebTitle::createConn(const std::string &name)
@@ -113,20 +116,18 @@ bool WebTitle::createConn(const std::string &name)
       throw std::out_of_range("Can not perform curl_easy_perform " );
     }
 
-    ofstream s;
-    s.open("time.mk.out", ios::app);
+//    ofstream s;
+//    s.open("time.mk.out", ios::app);
 
-    s << htmlData << endl;
+//    s << htmlData << endl;
 
     return true;
 }
 
-WebTitle::WebTitle(const std::string &name, const std::string &tag, const char *attr[])
+WebTitle::WebTitle( const std::string &tag, const char *attr[])
 {
     context.tag = tag;
-    context.attr = (char **)attr;
-
-   // createConn( name);
+    context.attr = const_cast<char **>( attr );
 }
 
 
@@ -138,11 +139,9 @@ Scraper::Scraper(std::unordered_map<std::string, WebTitle> & umap) : webSites(um
 
 Scraper::~Scraper()
 {
-    for( auto& it : threadIds)
-        it.join();
+//    for( auto& it : threadIds)
+//        it.join();
 }
-
-
 
 bool WebTitle::initCurl(const char *url)
 {
@@ -203,14 +202,13 @@ int WebTitle::writer(char *data, size_t size, size_t nmemb,
 
 void Scraper::startScraping()
 {
+    int i = 1;
     for( auto &site: webSites)
     {
-
-        threadIds.push_back(std::thread([&site]() {
-
+        std::thread([&site]() {
             site.second.createConn(site.first);
             site.second.parseHtml();
-        }));
+        }).detach();
     }
 }
 
@@ -224,7 +222,6 @@ std::string Scraper::getHeadline(std::string &webSite)
             throw out_of_range("The website you enter is not in the list");
         }
 
-        cerr << "WebSite << " << it->first  << "HeadLine news =>" << it->second.getContext().title << endl;
         it->second.getContext().dataExtracted = false;
         return it->second.getContext().title;
 }
